@@ -3,15 +3,15 @@ import java.awt.*;
 
 public class GamePanel extends JPanel {
 
-    int xSize, ySize;
-    int xFieldSize, yFieldSize;
+    Dimension panelSize;
+    Dimension boardSize;
+    Dimension fieldSize;
 
-    public GamePanel(int x, int y){
-        xSize = x;
-        ySize = y;
-        xFieldSize = calculateFieldSize().width;
-        yFieldSize = calculateFieldSize().height;
-        System.out.println(xFieldSize + " " + yFieldSize);
+    public GamePanel(Dimension boardSize, Dimension panelSize){
+        this.boardSize = boardSize;
+        this.panelSize = panelSize;
+        fieldSize = calculateFieldSize();
+        System.out.println(fieldSize);
     }
 
     @Override
@@ -20,6 +20,6 @@ public class GamePanel extends JPanel {
     }
 
     public Dimension calculateFieldSize(){
-        return new Dimension((int)Math.floor((double)getWidth()/xSize), (int)Math.floor((double)getHeight()/ySize));
+        return new Dimension((int)Math.floor((double)panelSize.width/boardSize.width), (int)Math.floor((double)panelSize.height/boardSize.height));
     }
 }
