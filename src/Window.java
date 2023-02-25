@@ -19,8 +19,15 @@ public class Window extends JFrame{
         setSize(600, 800);
         add(mainPanel);
 
+        createUIComponents();
+
         board = new Board(xSize, ySize, bombs);
+    }
+
+    private void createUIComponents() {
         gamePanel = new GamePanel(xSize, ySize);
         getContentPane().add(gamePanel);
+        gamePanel.setSize(100, 100);
+        pack();
     }
 }
