@@ -11,8 +11,12 @@ public class MenuPanel extends JPanel {
         add(resetButton, gbc);
         add(toggleButton, gbc);
 
-        resetButton.addActionListener(e -> {
+        resetButton.addActionListener(e -> { //TODO NOT WORKING YET
             Window.board = new Board(Window.board.xSize, Window.board.ySize, Window.board.bombs);
+        });
+
+        toggleButton.addActionListener(e -> {
+            Board.bombState = !Board.bombState;
         });
     }
 }

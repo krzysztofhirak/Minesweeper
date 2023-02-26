@@ -4,7 +4,7 @@ import java.awt.*;
 public class Window extends JFrame{
     int xSize = 16;
     int ySize = 16;
-    int bombs = 48;
+    int bombs = 30;
     final Dimension WINDOW_SIZE = new Dimension(600, 700);
 
     JPanel gamePanel = new JPanel();

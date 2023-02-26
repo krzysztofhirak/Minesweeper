@@ -1,11 +1,17 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.LinkedList;
 import java.util.Random;
 
 public class Board extends JPanel{
     Field[][] fields;
     int xSize, ySize;
     int bombs;
+    public static boolean bombState = false;
+    boolean firstClick = true;
+    LinkedList<Field> checkedList = new LinkedList<>();
+    LinkedList<Field> toCheck = new LinkedList<>();
+    LinkedList<Field> checked = new LinkedList<>();
 
     public Board(int x, int y, int bombs){
         fields = new Field[x][y];
@@ -17,29 +23,67 @@ public class Board extends JPanel{
         setBackground(Color.GREEN);
 
         generateEmptyFields();
+        Colors.initColors();
 
         if(bombs > x*y-1){
             System.out.println("Za dużo bomb");
         } else {
-            generateBombs(bombs);
-            Colors.initColors();
-            calculateFields();
             for(int i = 0; i < fields.length; i++){
                 for(int j = 0; j < fields[0].length; j++){
                     add(fields[i][j]);
                     int finalI = i;
                     int finalJ = j;
                     fields[i][j].addActionListener(e -> {
-                        fields[finalI][finalJ].setFont(new Font("Franklin Gothic", Font.BOLD, 20));
-                        fields[finalI][finalJ].setForeground(fields[finalI][finalJ].color);
-                        fields[finalI][finalJ].setEnabled(false);
-                        if(fields[finalI][finalJ].value == 10) fields[finalI][finalJ].setText("#");
-                        else if(fields[finalI][finalJ].value == 0) fields[finalI][finalJ].setText(" ");
-                        else fields[finalI][finalJ].setText(String.valueOf(fields[finalI][finalJ].value));
+                        if(!bombState){
+                            if(!fields[finalI][finalJ].bombMarked){
+                                fields[finalI][finalJ].setEnabled(true);
+                                if(firstClick){
+                                    boolean boardIsValid = false;
+                                    while(!boardIsValid){
+                                        generateBombsAndCalculateFields();
+                                        if(fields[finalI][finalJ].value != 10){
+                                            boardIsValid = true;
+                                        }
+                                    }
+                                    firstClick = false;
+                                }
+                                showField(fields[finalI][finalJ]);
+                                if(fields[finalI][finalJ].value == 0) checkSurrounding(fields[finalI][finalJ]);
+                            } else fields[finalI][finalJ].setEnabled(false);
+                        } else {
+                            markBomb(fields[finalI][finalJ]);
+                        }
                     });
                 }
             }
         }
+    }
+
+    public void markBomb(Field field){
+        fields[field.x][field.y].setFont(new Font("Franklin Gothic", Font.BOLD, 20));
+        if(!fields[field.x][field.y].bombMarked){
+            fields[field.x][field.y].setBackground(Colors.get(10));
+            fields[field.x][field.y].setForeground(Color.LIGHT_GRAY);
+            fields[field.x][field.y].setText("B");
+        } else {
+            fields[field.x][field.y].setBackground(Color.DARK_GRAY);
+            fields[field.x][field.y].setText(" ");
+        }
+    }
+
+    public void showField(Field field){
+        fields[field.x][field.y].setFont(new Font("Franklin Gothic", Font.BOLD, 20));
+        fields[field.x][field.y].setForeground(fields[field.x][field.y].color);
+        fields[field.x][field.y].setEnabled(false);
+        fields[field.x][field.y].revealed = true;
+        if(fields[field.x][field.y].value == 10) fields[field.x][field.y].setText("#");
+        else if(fields[field.x][field.y].value == 0) fields[field.x][field.y].setText(" ");
+        else fields[field.x][field.y].setText(String.valueOf(fields[field.x][field.y].value));
+    }
+
+    public void generateBombsAndCalculateFields(){
+        generateBombs(bombs);
+        calculateFields();
     }
 
     public void generateBombs(int amount){
@@ -48,7 +92,7 @@ public class Board extends JPanel{
             Random random = new Random();
             int x = random.nextInt(xSize);
             int y = random.nextInt(ySize);
-            if(fields[x][y].value != 10 && fields[x][y] != null){
+            if(fields[x][y].value != 10 && fields[x][y] != null && fields[x][y].isEnabled()){
                 fields[x][y].value = 10;
                 generated++;
             }
@@ -108,4 +152,63 @@ public class Board extends JPanel{
             System.out.print("\n");
         }
     }
+
+    public void checkSurrounding(Field field){
+        int x = field.x;
+        int y = field.y;
+        LinkedList<Field> surrounding = new LinkedList<>();
+        if(fieldExists(x-1, y-1)) surrounding.add(fields[x-1][y-1]);
+        if(fieldExists(x, y-1)) surrounding.add(fields[x][y-1]);
+        if(fieldExists(x+1, y-1)) surrounding.add(fields[x+1][y-1]);
+        if(fieldExists(x-1, y)) surrounding.add(fields[x-1][y]);
+        if(fieldExists(x+1, y)) surrounding.add(fields[x+1][y]);
+        if(fieldExists(x-1, y+1)) surrounding.add(fields[x-1][y+1]);
+        if(fieldExists(x, y+1)) surrounding.add(fields[x][y+1]);
+        if(fieldExists(x+1, y+1)) surrounding.add(fields[x+1][y+1]);
+
+        for (Field sf : surrounding){
+            showField(sf);
+            sf.revealed = true;
+            if(sf.value == 0 && !checked.contains(sf)){
+                toCheck.add(sf);
+            }
+        }
+        checked.add(fields[x][y]);
+        toCheck.remove(fields[x][y]);
+        for (Field f2 : toCheck){
+//            System.out.println(toCheck.size());
+            checkSurrounding(f2);
+        }
+    }
+
+//    public void checkSurrounding(Field field){
+//        if(fieldExists(field.x -1, field.y-1) && fields[field.x-1][field.y-1].value == 0 && !checkedList.contains(fields[field.x-1][field.y-1])){
+//            checkSurrounding(fields[field.x-1][field.y-1]);
+//        }
+//        else if(fieldExists(field.x, field.y-1) && fields[field.x][field.y-1].value == 0 && !checkedList.contains(fields[field.x][field.y-1])){
+//            checkSurrounding(fields[field.x][field.y-1]);
+//        }
+//        else if(fieldExists(field.x+1, field.y-1) && fields[field.x+1][field.y-1].value == 0 && !checkedList.contains(fields[field.x+1][field.y-1])){
+//            checkSurrounding(fields[field.x+1][field.y-1]);
+//        }
+//        else if(fieldExists(field.x-1, field.y) && fields[field.x-1][field.y].value == 0 && !checkedList.contains(fields[field.x-1][field.y])){
+//            checkSurrounding(fields[field.x-1][field.y]);
+//        }
+//        else if(fieldExists(field.x+1, field.y) && fields[field.x+1][field.y].value == 0 && !checkedList.contains(fields[field.x+1][field.y])){
+//            checkSurrounding(fields[field.x+1][field.y]);
+//        }
+//        else if(fieldExists(field.x-1, field.y+1) && fields[field.x-1][field.y+1].value == 0 && !checkedList.contains(fields[field.x-1][field.y+1])){
+//            checkSurrounding(fields[field.x-1][field.y+1]);
+//        }
+//        else if(fieldExists(field.x, field.y+1) && fields[field.x][field.y+1].value == 0 && !checkedList.contains(fields[field.x][field.y+1])){
+//            checkSurrounding(fields[field.x][field.y+1]);
+//        }
+//        else if(fieldExists(field.x+1, field.y+1) && fields[field.x+1][field.y+1].value == 0 && !checkedList.contains(fields[field.x+1][field.y+1])){
+//            checkSurrounding(fields[field.x+1][field.y+1]);
+//        }
+//        else {
+//            showField(fields[field.x][field.y]);
+//            checkedList.add(fields[field.x][field.y]);
+//        }
+//    }
 }
