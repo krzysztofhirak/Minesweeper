@@ -3,7 +3,7 @@ import java.awt.*;
 
 public class MenuPanel extends JPanel {
     JButton resetButton = new JButton("RESET");
-    JButton toggleButton = new JButton("TOGGLE");
+    JButton toggleButton = new JButton("SET SAFE");
 
     public MenuPanel(){
         setLayout(new GridBagLayout());
@@ -17,6 +17,14 @@ public class MenuPanel extends JPanel {
 
         toggleButton.addActionListener(e -> {
             Board.bombState = !Board.bombState;
+            if(Board.bombState){
+                toggleButton.setText("SET BOMB");
+                toggleButton.setBackground(Color.RED);
+            }
+            else {
+                toggleButton.setText("SET SAFE");
+                toggleButton.setBackground(Color.WHITE);
+            }
         });
     }
 }
